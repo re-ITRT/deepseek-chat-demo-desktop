@@ -18,6 +18,14 @@ class LocalWebServer {
   /// Flutter asset 里打包的静态站点根目录。
   static const String kAssetWebRoot = 'web/dist';
 
+  /// 固定的本地 HTTP 端口。
+  ///
+  /// chat-demo 用 localStorage / IndexedDB 持久化会话与附件，按 origin（协议+
+  /// 主机+端口）隔离。若每次启动端口随机，origin 也随之变化，WebKit 会把数据
+  /// 当作「不同的网站」分开存储，用户就看不到上次的数据，表现为「关闭后数据
+  /// 被清空」。固定端口后 origin 恒定，数据能跨启动保留。
+  static const int kPort = 47829;
+
   HttpServer? _server;
   int _port = 0;
   bool _started = false;
@@ -40,11 +48,17 @@ class LocalWebServer {
     await _extractAssetTree(webDir);
 
     final handler = _buildHandler(webDir);
-    _server = await shelf_io.serve(
-      handler,
-      InternetAddress.loopbackIPv4,
-      0, // 端口 0 => 系统分配空闲端口
-    );
+    try {
+      _server = await shelf_io.serve(
+        handler,
+        InternetAddress.loopbackIPv4,
+        kPort,
+      );
+    } on Exception catch (e) {
+      throw StateError(
+        '本地端口 $kPort 已被占用，请先关闭上一个 DeepSeek Chat Demo 再启动'
+        '（固定端口是为了保证 LocalStorage/IndexedDB 持久化）。原始错误: $e');
+    }
     _port = _server!.port;
     _started = true;
     // ignore: avoid_print

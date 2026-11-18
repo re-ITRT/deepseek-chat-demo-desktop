@@ -42,6 +42,7 @@ EOF
 # 2) 二进制 + 运行时库 + 数据
 cp -a "$BUNDLE/deepseek_chat_demo" "$PKGDIR/usr/lib/deepseek-chat-demo/"
 cp -a "$BUNDLE/data/flutter_assets" "$PKGDIR/usr/lib/deepseek-chat-demo/data/"
+cp -a "$BUNDLE/data/icudtl.dat" "$PKGDIR/usr/lib/deepseek-chat-demo/data/"
 # 把插件 .so 装进 lib/（deepseek_chat_demo 运行时会按 $ORIGIN/lib 找）
 if [ -d "$BUNDLE/lib" ]; then
   cp -a "$BUNDLE"/lib/*.so "$PKGDIR/usr/lib/deepseek-chat-demo/lib/" 2>/dev/null || true

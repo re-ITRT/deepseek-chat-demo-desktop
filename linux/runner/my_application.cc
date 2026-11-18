@@ -18,14 +18,24 @@ G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 //
 // DeepSeek Chat Demo 在 Linux 下把实际网页内容放进 desktop_webview_window
 // 插件创建的独立 WebKit 窗口，本 Flutter 窗口只是一个承载 Dart 事件循环的壳。
-// 为避免出现一个多余的空白窗口，这里先显示再立即最小化到任务栏——任务栏仍
-// 保留入口（WebView 万一创建失败用户仍可恢复），但不再占用正面的窗口位置。
+// 为避免出现一个多余的空白窗口，这里在真实 WebView 窗口拉起后完全隐藏壳窗口。
+// （Dart 侧 openLinuxWebView 打开失败会 complete 并退出进程，因此隐藏不会让
+// 用户陷入"程序在跑但看不到"的境地。）
+//
+// 注意：必须用返回 gboolean 的回调包装，绝不能用 (GSourceFunc)gtk_window_iconify
+// 之类的强转——GSourceFunc 要求返回 gboolean 表示是否继续调度，直接传 void 返回的
+// 函数是未定义行为。
+static gboolean hide_toplevel(gpointer data) {
+  GtkWindow* window = GTK_WINDOW(data);
+  gtk_widget_hide(GTK_WIDGET(window));
+  return G_SOURCE_REMOVE;
+}
+
 static void first_frame_cb(MyApplication* self, FlView* view) {
   GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(view));
   gtk_widget_show(toplevel);
-  // 等真实 WebView 窗口有时间被插件拉起后，把壳窗口收进任务栏。
-  g_timeout_add(150, (GSourceFunc)gtk_window_iconify,
-                (gpointer)GTK_WINDOW(toplevel));
+  // 等真实 WebView 窗口有时间被插件拉起后，把壳窗口藏起来。
+  g_timeout_add(160, hide_toplevel, toplevel);
 }
 
 // Implements GApplication::activate.

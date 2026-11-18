@@ -15,8 +15,17 @@ struct _MyApplication {
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
 // Called when first Flutter frame received.
+//
+// DeepSeek Chat Demo 在 Linux 下把实际网页内容放进 desktop_webview_window
+// 插件创建的独立 WebKit 窗口，本 Flutter 窗口只是一个承载 Dart 事件循环的壳。
+// 为避免出现一个多余的空白窗口，这里先显示再立即最小化到任务栏——任务栏仍
+// 保留入口（WebView 万一创建失败用户仍可恢复），但不再占用正面的窗口位置。
 static void first_frame_cb(MyApplication* self, FlView* view) {
-  gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
+  GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(view));
+  gtk_widget_show(toplevel);
+  // 等真实 WebView 窗口有时间被插件拉起后，把壳窗口收进任务栏。
+  g_timeout_add(150, (GSourceFunc)gtk_window_iconify,
+                (gpointer)GTK_WINDOW(toplevel));
 }
 
 // Implements GApplication::activate.

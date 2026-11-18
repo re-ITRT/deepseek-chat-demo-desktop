@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 网络安全配置：默认禁止明文，仅放行本地回环地址用于本地资源服务器。
+     DeepSeek API 走 https://api.deepseek.com（HTTPS，不在此列）。 -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false"/>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>
